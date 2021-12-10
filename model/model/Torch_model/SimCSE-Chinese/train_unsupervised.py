@@ -124,6 +124,7 @@ def compute_corrcoef(x, y):
 def compute_loss(y_pred,lamda=0.05):
     idxs = torch.arange(0,y_pred.shape[0],device='cuda')
     y_true = idxs + 1 - idxs % 2 * 2
+    #y_true与y_pred的值对应，表示该样本的正样本所对应的索引
     similarities = F.cosine_similarity(y_pred.unsqueeze(1), y_pred.unsqueeze(0), dim=2)
     #torch自带的快速计算相似度矩阵的方法
     similarities = similarities-torch.eye(y_pred.shape[0],device='cuda') * 1e12
@@ -131,7 +132,8 @@ def compute_loss(y_pred,lamda=0.05):
     similarities = similarities / lamda
     #论文中除以 temperature 超参 0.05
     loss = F.cross_entropy(similarities,y_true)
-    return torch.mean(loss)
+    #这里需要对cross_entropy有所理解，Y_true(bsz,)表示将log_softmax(similarities)(bsz*c)每个样本对应位置的值取出，并取绝对值后相加求平均(也可以自定义计算方式)
+    return torch.mean(loss)#这里再次求平均是没有必要的
 
 def test(test_data,model):
     traget_idxs, source_idxs, label_list = test_data.get_data()
